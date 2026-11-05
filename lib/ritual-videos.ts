@@ -1,6 +1,7 @@
 import meta from "./content/videos-meta.json";
 
-export type RitualVideo = { n: string; file: string; poster: string; duration: number; ratio: number };
+/** Videos are streamed (HLS) straight from the live site's CDN; only the poster image is stored locally. */
+export type RitualVideo = { n: string; hls: string; poster: string; duration: number; ratio: number };
 export const allVideos = meta as RitualVideo[];
 
 /** Which of the live site's videos belong to which ritual card (by document order on the original page). */

@@ -3,11 +3,48 @@ import { AnimatePresence, motion } from "motion/react";
 import { Play, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type RefObject } from "react";
+import { asset } from "@/lib/asset";
 import { allVideos, fmtDur, type RitualVideo } from "@/lib/ritual-videos";
 import { GlowButton, Reveal, SectionHeading } from "./ui";
 
 const ease = [0.22, 1, 0.36, 1] as const;
+
+/** <video> that plays an HLS stream (hls.js on Chrome/Firefox/Edge, native on Safari). `active=false` defers loading. */
+function HlsVideo({ hls, active = true, onReady, videoRef, ...props }: { hls: string; active?: boolean; onReady?: () => void; videoRef?: RefObject<HTMLVideoElement | null> } & Omit<ComponentProps<"video">, "src" | "ref">) {
+  const inner = useRef<HTMLVideoElement>(null);
+  const ref = videoRef ?? inner;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !active) return;
+    let instance: { destroy: () => void } | undefined;
+    let cancelled = false;
+    let nativeCleanup: (() => void) | undefined;
+    import("hls.js").then(({ default: Hls }) => {
+      if (cancelled) return;
+      if (Hls.isSupported()) {
+        const h = new Hls({ maxBufferLength: 20, capLevelToPlayerSize: true });
+        instance = h;
+        h.loadSource(hls);
+        h.attachMedia(el);
+        h.on(Hls.Events.MANIFEST_PARSED, () => onReady?.());
+      } else if (el.canPlayType("application/vnd.apple.mpegurl")) {
+        // Safari / iOS: native HLS
+        el.src = hls;
+        const ready = () => onReady?.();
+        el.addEventListener("loadedmetadata", ready, { once: true });
+        nativeCleanup = () => el.removeEventListener("loadedmetadata", ready);
+      }
+    });
+    return () => {
+      cancelled = true;
+      instance?.destroy();
+      nativeCleanup?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hls, active]);
+  return <video ref={ref} {...props} />;
+}
 
 export function VideoModal({ videos, title, onClose }: { videos: RitualVideo[]; title: string; onClose: () => void }) {
   const [i, setI] = useState(0);
@@ -25,7 +62,7 @@ export function VideoModal({ videos, title, onClose }: { videos: RitualVideo[]; 
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
       <motion.div initial={{ scale: 0.92, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }} transition={{ duration: 0.4, ease }} onClick={(e) => e.stopPropagation()} className="relative flex max-h-[92svh] flex-col items-center gap-4">
         <button onClick={onClose} aria-label="Close" className="absolute -top-2 right-0 z-10 translate-y-[-100%] rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 sm:-right-12 sm:top-0 sm:translate-y-0"><X size={20} /></button>
-        <video key={v.file} src={v.file} poster={v.poster} controls autoPlay playsInline className="max-h-[78svh] w-auto max-w-full rounded-3xl border border-gold/30 bg-black shadow-[0_0_80px_-10px_rgba(124,58,237,.7)]" style={{ aspectRatio: v.ratio || 0.5625 }} />
+        <HlsVideo key={v.n} hls={v.hls} onReady={(() => { const el = document.querySelector<HTMLVideoElement>("video[data-modal]"); el?.play().catch(() => {}); })} data-modal="" poster={asset(v.poster)} controls autoPlay playsInline className="max-h-[78svh] w-auto max-w-full rounded-3xl border border-gold/30 bg-black shadow-[0_0_80px_-10px_rgba(124,58,237,.7)]" style={{ aspectRatio: v.ratio || 0.5625 }} />
         <div className="text-center">
           <p className="font-display text-xl text-white">{title}</p>
           {videos.length > 1 && (
@@ -64,16 +101,18 @@ export function VideoThumb({ videos, title }: { videos: RitualVideo[]; title: st
 
 function HoverVideo({ v, label }: { v: RitualVideo; label: string }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const wanted = useRef(false);
+  const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
   return (
     <>
       <button
-        onMouseEnter={() => ref.current?.play().catch(() => {})}
-        onMouseLeave={() => { if (ref.current) { ref.current.pause(); ref.current.currentTime = 0; } }}
+        onMouseEnter={() => { wanted.current = true; setLoaded(true); ref.current?.play().catch(() => {}); }}
+        onMouseLeave={() => { wanted.current = false; if (ref.current) { ref.current.pause(); ref.current.currentTime = 0; } }}
         onClick={() => setOpen(true)}
         className="group relative block aspect-[9/16] w-[62vw] shrink-0 snap-center overflow-hidden rounded-[2rem] border border-white/10 bg-black sm:w-60"
       >
-        <video ref={ref} src={v.file} poster={v.poster} muted loop playsInline preload="none" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+        <HlsVideo videoRef={ref} hls={v.hls} active={loaded} onReady={() => { if (wanted.current) ref.current?.play().catch(() => {}); }} poster={asset(v.poster)} muted loop playsInline preload="none" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
         <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gold/60 bg-black/50 text-gold backdrop-blur-sm transition group-hover:scale-0"><Play size={20} fill="currentColor" /></span>
         <span className="absolute bottom-4 left-4 right-4 text-left font-display text-lg leading-tight text-white">{label}</span>

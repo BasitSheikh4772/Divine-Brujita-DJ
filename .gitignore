@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local tooling
 .claude/
+
+# videos are streamed from the live site (HLS); keep only posters in the repo
+public/videos/*.mp4
