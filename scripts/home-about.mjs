@@ -1,0 +1,13 @@
+import * as cheerio from "cheerio";
+import fs from "node:fs";
+const t = await (await fetch("https://www.divinebrujitadj.org/", { headers: { "user-agent": "Mozilla/5.0" } })).text();
+const $ = cheerio.load(t);
+const i = t.indexOf("My Spiritual Journey");
+console.log("idx", i, t.slice(Math.max(0, i - 300), i + 400).replace(/\s+/g, " "));
+const links = [...$("a")].map((a) => ({ h: $(a).attr("href"), t: $(a).text().trim().replace(/\s+/g, " ").slice(0, 50) })).filter((x) => /Journey|Heritage|Career|Practice|Values|Boundaries|Creations/i.test(x.t));
+console.log(JSON.stringify(links));
+const acc = [...$(".accordion-item")].map((el) => ({ q: $(el).find(".accordion-item__title").first().text().trim(), a: $(el).find(".accordion-item__description").first().text().trim().replace(/\s+/g, " ").slice(0, 200) }));
+console.log("accordions", acc.length, JSON.stringify(acc.slice(0, 10)));
+const heads = [...$("h1,h2,h3")].map((h) => $(h).text().trim().replace(/\s+/g, " ")).filter(Boolean);
+console.log(heads.join(" | "));
+fs.writeFileSync("scripts/home.html", t);

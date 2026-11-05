@@ -1,0 +1,76 @@
+export type Cat = "all" | "love" | "protection" | "opportunity" | "healing" | "home" | "justice" | "self" | "devotion";
+
+export const categories: { id: Cat; label: string; blurb: string }[] = [
+  { id: "all", label: "All", blurb: "Every spell service in one place." },
+  { id: "love", label: "Love", blurb: "Reconnect, release and open the heart." },
+  { id: "protection", label: "Protection", blurb: "Shield, cloak and cleanse your energy." },
+  { id: "opportunity", label: "Opportunity", blurb: "Open roads, fresh starts and next steps." },
+  { id: "healing", label: "Healing", blurb: "Release heaviness and restore peace." },
+  { id: "home", label: "Home & Family", blurb: "Harmony and unity under your roof." },
+  { id: "justice", label: "Justice", blurb: "Divine justice and firm boundaries." },
+  { id: "self", label: "Confidence", blurb: "Own your power and love yourself." },
+  { id: "devotion", label: "Devotion", blurb: "Readings and offerings for Santísima." },
+];
+
+export type Service = { id: string; n?: string; name: string; price: number; cat: Exclude<Cat, "all">; hot?: boolean };
+
+const s = (n: string, name: string, price: number, cat: Service["cat"], hot?: boolean): Service => ({ id: n + name, n, name, price, cat, hot });
+
+export const services: Service[] = [
+  s("1", "Tarot Mini Reading on TikTok LIVE", 35, "devotion", true),
+  s("2", "Santa Muerte", 65, "devotion"),
+  s("3", "Safety / Protection", 100, "protection"),
+  s("4", "Shield Me / Cloaking", 125, "protection", true),
+  s("5", "Limpia / Aura Refresher", 65, "protection"),
+  s("6", "Youth and Pets", 30, "protection"),
+  s("7", "Road Opener / Fresh Start", 65, "opportunity", true),
+  s("8", "Next Step", 65, "opportunity"),
+  s("9", "Peace at Home", 65, "home"),
+  s("10", "Family Unity", 150, "home"),
+  s("11", "Feeling Off / Anxiety", 65, "healing"),
+  s("12", "Feeling Blue / Depression", 65, "healing"),
+  s("13", "Stress", 65, "healing"),
+  s("14", "Anger Management", 65, "healing"),
+  s("15", "Ego Buster", 65, "self"),
+  s("17", "Overthinking", 65, "healing"),
+  s("18", "Well-being", 65, "healing"),
+  s("19", "Emotional Healing", 65, "healing"),
+  s("20", "Soul Healing", 65, "healing", true),
+  s("21", "Love Yourself", 65, "self"),
+  s("22", "Sleep Like A Baby", 65, "healing"),
+  s("27", "Mamalon", 65, "self"),
+  s("28", "Mamalona", 65, "self"),
+  s("29", "Confidence", 65, "self"),
+  s("30", "Diosa / Chingona", 65, "self"),
+  s("31", "Diosa Body", 65, "self"),
+  s("32", "Chakra Realignment Doll", 125, "healing"),
+  s("34", "Open Them Up / Bring Walls Down", 65, "love"),
+  s("35", "Dependency / Addiction", 65, "healing"),
+  s("36", "Fruitfulness", 65, "opportunity"),
+  s("38", "Healthy Pregnancy", 65, "home"),
+  s("39", "Cry Me A River", 65, "love"),
+  s("40", "Return to Sender", 100, "justice"),
+  s("41", "POOF! Be Gone (Banish)", 100, "justice"),
+  s("42", "Divine Justice (Karma)", 100, "justice", true),
+  s("43", "Unwanted Guest / 3rd Party Removal", 100, "protection"),
+  s("44", "Pito Destroyer", 185, "justice"),
+  s("46", "Shush Your Mouth", 100, "justice"),
+  s("47", "Break Up", 100, "love"),
+  s("48", "Cord Release", 100, "love"),
+  s("49", "Justice Black Rose", 185, "justice"),
+  s("50", "Clarity Doll", 185, "healing"),
+  s("111", "Pineapple in Reverse", 150, "love"),
+  s("112", "Pineapple of Love", 150, "love", true),
+  { id: "ward-name", name: "Warding Your Name", price: 65, cat: "protection" },
+  { id: "unlimpia", name: "Unlimpia — Limpia in Reverse", price: 100, cat: "protection" },
+  { id: "covenant", name: "The Black Covenant of the Two Hearts", price: 350, cat: "love", hot: true },
+  { id: "eye", name: "The Crystal Eye Enchantment", price: 350, cat: "devotion" },
+  { id: "pig", name: "The Pig-Faced Severing", price: 300, cat: "justice" },
+  { id: "gifts", name: "Gifts for Santísima", price: 25, cat: "devotion" },
+];
+
+export const addons = [
+  { group: "Mind & Thoughts", items: ["Eyes (Focus)", "Ears (Listen)", "Lips & Tongue (Communication)", "Heart (Love & Affection)", "Bull Enhancement (Strongest)"] },
+  { group: "Karma", items: ["Bull Enhancement", "Stomach"] },
+  { group: "Ritual Enhancements", items: ["Addon Enchantments — $20", "Cemetery Burial Enhancement — $150", "Cement Enhancement — $150"] },
+];
